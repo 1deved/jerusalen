@@ -4,7 +4,7 @@
  * INSTRUCCIÓN: Reemplaza API_URL con el enlace de tu Web App de Google Apps Script.
  */
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwTj7f2_M3yZM39FW4tLte8x2JYuRFXNOfozYFOPwoPfjq-A46VYH3jBNSw1pOED6sv/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzb1U3cd_MjEX1cTso1pBm6N3kQMHcKedojBbrgjCPlpzRblbl2_BJZroIzgUOBa2rl/exec";
 
 /**
  * Realiza una petición GET al backend.

@@ -73,17 +73,49 @@ function filterSubjectsForTeacher(teacherId) {
 // ── Cargar notas existentes para la materia ──────────────────────────────────
 async function loadExistingGrades(subjectId) {
   try {
+    const grado = document.getElementById("grade-level").value.trim();
     const data = await apiGet("getGradesBySubject", { subjectId });
-    const grades = data.grades || [];
-    gradeStudentRows = grades.map(g => ({
-      student_id: g.student_id,
-      nombre:     g.studentName,
-      nota1:      g.nota1 || "",
-      nota2:      g.nota2 || "",
-      nota3:      g.nota3 || "",
-      promedio:   g.promedio || "",
-      gradeId:    g.id,
-    }));
+    const existingGrades = data.grades || [];
+    
+    // Obtener todos los estudiantes del grado seleccionado
+    const allStudents = typeof getAllStudents === 'function' ? getAllStudents() : [];
+    const filteredStudents = grado 
+      ? allStudents.filter(s => s.grado && s.grado.toLowerCase() === grado.toLowerCase())
+      : [];
+
+    // Si hay un grado seleccionado, mostramos la planilla completa de ese grado
+    if (filteredStudents.length > 0) {
+      gradeStudentRows = filteredStudents.map(s => {
+        const g = existingGrades.find(x => String(x.student_id) === String(s.id));
+        return {
+          student_id: s.id,
+          documento:  s.documento,
+          nombre:     s.nombre,
+          nota1:      g ? g.nota1 : "",
+          nota2:      g ? g.nota2 : "",
+          nota3:      g ? g.nota3 : "",
+          nota4:      g ? g.nota4 : "",
+          inas:       g ? g.inas : "",
+          promedio:   g ? g.promedio : "",
+          gradeId:    g ? g.id : null
+        };
+      });
+    } else {
+      // Si no hay grado, mostrar solo los que ya tienen nota (comportamiento anterior)
+      gradeStudentRows = existingGrades.map(g => ({
+        student_id: g.student_id,
+        documento:  g.documento || "",
+        nombre:     g.studentName,
+        nota1:      g.nota1 || "",
+        nota2:      g.nota2 || "",
+        nota3:      g.nota3 || "",
+        nota4:      g.nota4 || "",
+        inas:       g.inas || "",
+        promedio:   g.promedio || "",
+        gradeId:    g.id,
+      }));
+    }
+
     renderGradeRows();
   } catch (err) {
     showToast("Error al cargar notas: " + err.message, "error");
@@ -110,7 +142,7 @@ function addStudentToGrades() {
     documento: doc,
     nombre:    nombre,
     student_id: document.getElementById("grade-student-id").value || null,
-    nota1: "", nota2: "", nota3: "", promedio: "",
+    nota1: "", nota2: "", nota3: "", nota4: "", inas: "", promedio: "",
     gradeId: null,
   });
 
@@ -194,7 +226,7 @@ function renderGradeRows() {
   if (!gradeStudentRows.length) {
     tbody.innerHTML = `
       <tr id="grade-empty-row">
-        <td colspan="6">
+        <td colspan="8">
           <div class="table-empty">
             <div class="empty-icon">📋</div>
             <p>Agrega estudiantes para registrar sus notas.</p>
@@ -218,6 +250,10 @@ function renderGradeRows() {
            value="${row.nota2}" oninput="updateGradeRow(${idx},2,this.value)" placeholder="0.0"></td>
       <td><input type="number" class="form-control grade-input" min="0" max="10" step="0.1"
            value="${row.nota3}" oninput="updateGradeRow(${idx},3,this.value)" placeholder="0.0"></td>
+      <td><input type="number" class="form-control grade-input" min="0" max="10" step="0.1"
+           value="${row.nota4}" oninput="updateGradeRow(${idx},4,this.value)" placeholder="0.0"></td>
+      <td><input type="number" class="form-control grade-input" min="0"
+           value="${row.inas}" oninput="updateGradeRow(${idx},5,this.value)" placeholder="0"></td>
       <td id="avg-${idx}">${formatGrade(row.promedio)}</td>
       <td>
         <button class="btn btn-sm btn-danger" onclick="removeGradeRow(${idx})">✕</button>
@@ -230,11 +266,18 @@ function renderGradeRows() {
 function updateGradeRow(idx, corte, value) {
   const row = gradeStudentRows[idx];
   if (!row) return;
+  
+  if (corte === 5) {
+    row.inas = value;
+    return;
+  }
+  
   row[`nota${corte}`] = value;
 
-  const vals = [row.nota1, row.nota2, row.nota3]
+  const vals = [row.nota1, row.nota2, row.nota3, row.nota4]
+    .filter(v => v !== "" && v !== null && v !== undefined)
     .map(Number)
-    .filter(n => !isNaN(n) && n > 0);
+    .filter(n => !isNaN(n));
 
   row.promedio = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2) : "";
   const avgEl = document.getElementById(`avg-${idx}`);
@@ -275,6 +318,8 @@ async function saveAllGrades() {
         nota1:      r.nota1 || 0,
         nota2:      r.nota2 || 0,
         nota3:      r.nota3 || 0,
+        nota4:      r.nota4 || 0,
+        inas:       r.inas || 0,
         promedio:   r.promedio || 0,
         gradeId:    r.gradeId || null,
       })),
@@ -310,6 +355,5 @@ window.renderGradeRows      = renderGradeRows;
 window.updateGradeRow       = updateGradeRow;
 window.removeGradeRow       = removeGradeRow;
 window.saveAllGrades        = saveAllGrades;
-window.updateStudentSuggestions = updateStudentSuggestions;
 window.updateStudentSuggestions = updateStudentSuggestions;
 window.populateGradeSuggestions = populateGradeSuggestions;

@@ -1,5 +1,6 @@
 /**
  * report.js — Generación de boletines académicos
+ * (versión actualizada con descarga de .docx real)
  */
 
 let reportData = null;
@@ -23,7 +24,7 @@ async function initReportPage() {
   }
 }
 
-// ── Generar boletín ───────────────────────────────────────────────────────────
+// ── Generar boletín (vista previa en pantalla) ────────────────────────────────
 async function generateReport() {
   const studentId = document.getElementById("report-student").value;
   const periodo   = document.getElementById("report-period").value;
@@ -39,7 +40,7 @@ async function generateReport() {
 
   try {
     const data = await apiGet("getStudentReport", { studentId });
-    reportData = data;
+    reportData = { ...data, studentId, periodo };
     renderBulletin(data, periodo);
     document.getElementById("bulletin-container").classList.remove("hidden");
     document.getElementById("report-actions").classList.remove("hidden");
@@ -56,7 +57,6 @@ function renderBulletin(data, periodo = "Año Escolar") {
   const { student, grades } = data;
   const year = new Date().getFullYear();
 
-  // Calcular promedio global
   const validGrades = grades.filter(g => g.promedio && !isNaN(parseFloat(g.promedio)));
   const globalAvg = validGrades.length
     ? (validGrades.reduce((sum, g) => sum + parseFloat(g.promedio), 0) / validGrades.length).toFixed(2)
@@ -66,7 +66,6 @@ function renderBulletin(data, periodo = "Año Escolar") {
   const statusClass = isApproved ? "approved" : "failed";
   const statusLabel = isApproved ? "✅ Aprobado" : "❌ Reprobado";
 
-  // Materias aprobadas / reprobadas
   const approvedCount = validGrades.filter(g => parseFloat(g.promedio) >= 6).length;
   const failedCount   = validGrades.length - approvedCount;
 
@@ -109,6 +108,8 @@ function renderBulletin(data, periodo = "Año Escolar") {
               <th>Corte 1</th>
               <th>Corte 2</th>
               <th>Corte 3</th>
+              <th>Corte 4</th>
+              <th>Fallas</th>
               <th>Promedio</th>
               <th>Estado</th>
             </tr>
@@ -119,7 +120,6 @@ function renderBulletin(data, periodo = "Año Escolar") {
               const statusBadge = !isNaN(avg)
                 ? (avg >= 6 ? '<span class="badge badge-green">Aprobado</span>' : '<span class="badge badge-red">Reprobado</span>')
                 : '<span class="badge badge-gray">—</span>';
-
               return `
               <tr>
                 <td><strong>${g.subjectName || "—"}</strong></td>
@@ -127,6 +127,8 @@ function renderBulletin(data, periodo = "Año Escolar") {
                 <td style="text-align:center">${g.nota1 || "—"}</td>
                 <td style="text-align:center">${g.nota2 || "—"}</td>
                 <td style="text-align:center">${g.nota3 || "—"}</td>
+                <td style="text-align:center">${g.nota4 || "—"}</td>
+                <td style="text-align:center">${g.inas || "0"}</td>
                 <td style="text-align:center">${!isNaN(avg) ? `<strong>${avg.toFixed(1)}</strong>` : "—"}</td>
                 <td>${statusBadge}</td>
               </tr>`;
@@ -181,8 +183,38 @@ function exportPDF() {
   setTimeout(() => window.print(), 800);
 }
 
+// ── Descargar boletín como .docx (plantilla real llenada) ─────────────────────
+async function downloadDocx() {
+  if (!reportData) {
+    showToast("Primero genera el boletín.", "warning");
+    return;
+  }
+
+  const btn = document.getElementById("btn-download-docx");
+  const originalText = btn.innerHTML;
+  setButtonLoading(btn, true, originalText, "Generando .docx...");
+
+  try {
+    const data = await apiGet("generateBulletin", {
+      studentId: reportData.studentId,
+      periodo:   reportData.periodo || "Periodo 2025",
+    });
+
+    if (data.error) throw new Error(data.error);
+
+    // Abrir la URL de descarga directamente
+    window.open(data.url, "_blank");
+    showToast("¡Boletín .docx listo! Revisa las descargas.", "success");
+  } catch (err) {
+    showToast("Error generando el .docx: " + err.message, "error");
+  } finally {
+    setButtonLoading(btn, false, originalText);
+  }
+}
+
 window.initReportPage  = initReportPage;
 window.generateReport  = generateReport;
 window.renderBulletin  = renderBulletin;
 window.printBulletin   = printBulletin;
 window.exportPDF       = exportPDF;
+window.downloadDocx    = downloadDocx;
