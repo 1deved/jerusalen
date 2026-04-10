@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notas — Sistema Académico</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .grade-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .step-num {
+      width: 28px; height: 28px;
+      background: var(--blue-600);
+      color: white;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: .78rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-label {
+      font-weight: 600;
+      font-size: .9rem;
+      color: var(--gray-800);
+    }
+    .step-line {
+      flex: 1;
+      height: 1px;
+      background: var(--gray-200);
+    }
+    .student-add-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+      background: var(--blue-50);
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px dashed var(--blue-200);
+      margin-bottom: 16px;
+    }
+    .grades-table-header {
+      display: grid;
+      grid-template-columns: 1.5fr 80px 80px 80px 70px 36px;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md) var(--radius-md) 0 0;
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: var(--gray-500);
+    }
+    .grades-table-body {
+      border: 1px solid var(--gray-200);
+      border-top: none;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      overflow: hidden;
+    }
+    .grade-row {
+      display: grid;
+      grid-template-columns: 1.5fr 80px 80px 80px 70px 36px;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .grade-row:last-child { border-bottom: none; }
+    .grade-row:hover { background: var(--gray-50); }
+  </style>
+</head>
+<body>
+  <div class="app-layout" id="app-layout">
+    <div class="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <button id="menu-toggle" class="btn btn-secondary btn-sm">☰</button>
+          <h1>Registro de Notas</h1>
+          <p>Ingresa calificaciones por materia</p>
+        </div>
+        <div class="header-right">
+          <button class="btn btn-success" onclick="saveAllGrades()" id="btn-save-grades">
+            💾 Guardar Todas las Notas
+          </button>
+        </div>
+      </header>
+
+      <main class="page-content">
+
+        <!-- Paso 1: Seleccionar Profesor y Materia -->
+        <div class="card mb-24">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Paso 1 — Selecciona Profesor y Materia</div>
+              <div class="card-subtitle">Las materias se filtran automáticamente según el profesor.</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Profesor <span class="required">*</span></label>
+                <select id="grade-teacher" class="form-control">
+                  <option value="">— Seleccionar —</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Materia <span class="required">*</span></label>
+                <select id="grade-subject" class="form-control">
+                  <option value="">— Primero selecciona un profesor —</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group mt-16" style="margin-bottom:0; max-width: 240px">
+              <label class="form-label">Grado / Curso</label>
+              <input type="text" id="grade-level" class="form-control" placeholder="Ej: 10°A" list="grades-datalist">
+              <datalist id="grades-datalist"></datalist>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 2: Agregar estudiantes -->
+        <div class="card mb-24">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Paso 2 — Estudiantes</div>
+              <div class="card-subtitle">Busca o crea estudiantes para registrar sus notas.</div>
+            </div>
+          </div>
+          <div class="card-body">
+
+            <!-- Formulario búsqueda/creación rápida -->
+            <div class="student-add-row">
+              <div>
+                <label class="form-label text-xs">Documento del estudiante</label>
+                <div style="display:flex; gap:8px">
+                  <input type="text" id="grade-student-search" class="form-control"
+                    placeholder="Buscar por documento..."
+                    list="students-datalist"
+                    onblur="lookupStudentByDoc(null)">
+                  <button id="btn-lookup-student" class="btn btn-outline btn-sm" onclick="lookupStudentByDoc(this)" title="Buscar">🔍</button>
+                </div>
+                <datalist id="students-datalist"></datalist>
+              </div>
+              <div>
+                <label class="form-label text-xs">Nombre completo</label>
+                <input type="text" id="grade-student-name" class="form-control" placeholder="Nombre del estudiante">
+                <input type="hidden" id="grade-student-id">
+                <input type="hidden" id="grade-student-grado">
+              </div>
+              <div>
+                <button class="btn btn-primary" onclick="addStudentToGrades()" style="white-space:nowrap">
+                  ➕ Agregar
+                </button>
+              </div>
+            </div>
+            <div class="form-hint" style="margin-bottom:16px">
+              💡 Si el estudiante no existe, escribe su documento y nombre → se creará automáticamente al guardar.
+            </div>
+
+            <!-- Tabla de notas -->
+            <div class="grades-table-header">
+              <span>Estudiante</span>
+              <span style="text-align:center">Corte 1</span>
+              <span style="text-align:center">Corte 2</span>
+              <span style="text-align:center">Corte 3</span>
+              <span style="text-align:center">Promedio</span>
+              <span></span>
+            </div>
+            <div class="grades-table-body" id="grade-rows-wrap">
+              <table style="width:100%">
+                <tbody id="grade-rows"></tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/students.js"></script>
+  <script src="js/teachers.js"></script>
+  <script src="js/subjects.js"></script>
+  <script src="js/grades.js"></script>
+  <script>
+    const session = requireAuth();
+    renderSidebar("grades");
+    initMobileMenu();
+    renderGradeRows(); // Mostrar tabla vacía inicial
+
+    async function initPage() {
+      const teacherSel = document.getElementById("grade-teacher");
+      const subjectSel = document.getElementById("grade-subject");
+      
+      try {
+        // Indicador visual de carga inicial
+        teacherSel.innerHTML = '<option value="">⏳ Cargando datos...</option>';
+        subjectSel.innerHTML = '<option value="">⏳ Esperando datos...</option>';
+
+        // Cargar dependencias necesarias en paralelo
+        const [td, sd, std] = await Promise.all([
+          apiGet("getTeachers"),
+          apiGet("getSubjects"),
+          apiGet("getStudents"),
+        ]);
+
+        if (typeof setAllTeachers === 'function') setAllTeachers(td.teachers || []);
+        if (typeof setAllSubjects === 'function') setAllSubjects(sd.subjects || []);
+        if (typeof setAllStudents === 'function') setAllStudents(std.students || []);
+
+        await initGradesPage(session);
+        if (typeof updateStudentSuggestions === 'function') updateStudentSuggestions(); 
+      } catch (err) {
+        showToast("Error al inicializar datos: " + err.message, "error");
+        teacherSel.innerHTML = '<option value="">❌ Error al cargar</option>';
+      }
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

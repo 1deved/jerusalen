@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión — Sistema Académico</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .login-form-wrap .logo-mobile {
+      display: none;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 768px) {
+      .login-form-wrap .logo-mobile { display: block; }
+    }
+    .login-input-group {
+      position: relative;
+    }
+    .login-input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: var(--gray-400);
+      pointer-events: none;
+    }
+    .login-input-group .form-control {
+      padding-left: 40px;
+    }
+    .login-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--gray-400);
+      font-size: .78rem;
+      margin: 20px 0;
+    }
+    .login-divider::before, .login-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--gray-200);
+    }
+    #login-error {
+      background: var(--red-100);
+      color: #b91c1c;
+      border-radius: var(--radius-md);
+      padding: 11px 14px;
+      font-size: .85rem;
+      font-weight: 500;
+      margin-bottom: 18px;
+      display: none;
+    }
+    .demo-creds {
+      background: var(--blue-50);
+      border: 1px solid var(--blue-100);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-top: 20px;
+      font-size: .8rem;
+    }
+    .demo-creds strong {
+      display: block;
+      color: var(--blue-700);
+      margin-bottom: 6px;
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .demo-creds p { color: var(--gray-600); line-height: 1.8; }
+    .demo-creds code {
+      background: var(--blue-100);
+      color: var(--blue-800);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--gray-400);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .password-wrap {
+      position: relative;
+    }
+    .password-wrap .form-control {
+      padding-right: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-page">
+    <!-- Panel izquierdo: Branding -->
+    <div class="login-brand">
+      <div class="brand-logo">
+        <div class="icon-wrap">📚</div>
+        <span>Sistema Académico</span>
+      </div>
+      <h1 class="brand-headline">Gestión<br>académica<br><em>simplificada.</em></h1>
+      <p class="brand-sub">
+        Registra notas, genera boletines y administra tu institución
+        educativa desde un solo lugar, de forma rápida y profesional.
+      </p>
+      <div class="brand-stats">
+        <div class="stat-item">
+          <strong>∞</strong>
+          <span>Estudiantes</span>
+        </div>
+        <div class="stat-item">
+          <strong>3</strong>
+          <span>Cortes</span>
+        </div>
+        <div class="stat-item">
+          <strong>PDF</strong>
+          <span>Boletines</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel derecho: Formulario -->
+    <div class="login-form-panel">
+      <div class="login-form-wrap">
+        <!-- Logo para móvil -->
+        <div class="logo-mobile">
+          <span style="font-size: 2.5rem">📚</span>
+          <div style="font-size: 1rem; font-weight: 700; color: var(--gray-800); margin-top: 8px">Sistema Académico</div>
+        </div>
+
+        <h2 class="login-title">Bienvenido de vuelta</h2>
+        <p class="login-subtitle">Ingresa tus credenciales para acceder al sistema.</p>
+
+        <!-- Error -->
+        <div id="login-error"></div>
+
+        <!-- Formulario -->
+        <div class="form-group">
+          <label class="form-label">Usuario</label>
+          <div class="login-input-group">
+            <span class="login-input-icon">👤</span>
+            <input
+              type="text"
+              id="username"
+              class="form-control"
+              placeholder="Tu nombre de usuario"
+              autocomplete="username"
+              autofocus
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Contraseña</label>
+          <div class="login-input-group password-wrap">
+            <span class="login-input-icon">🔒</span>
+            <input
+              type="password"
+              id="password"
+              class="form-control"
+              placeholder="••••••••"
+              autocomplete="current-password"
+            >
+            <button
+              class="password-toggle"
+              type="button"
+              onclick="togglePassword()"
+              id="pw-toggle"
+              title="Mostrar/ocultar contraseña"
+            >👁️</button>
+          </div>
+        </div>
+
+        <button
+          class="btn btn-primary btn-lg btn-block"
+          id="btn-login"
+          onclick="handleLogin()"
+        >
+          Iniciar Sesión
+        </button>
+
+        <div class="login-divider">Demo</div>
+
+        <div class="demo-creds">
+          <strong>🔑 Credenciales de prueba</strong>
+          <p>
+            Admin: <code>admin</code> / <code>admin123</code><br>
+            Profesor: <code>profesor1</code> / <code>prof123</code>
+          </p>
+          <p style="margin-top: 8px; font-size: .73rem; color: var(--gray-400)">
+            Configura los usuarios en la hoja <em>users</em> de Google Sheets.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    // Si ya está logueado → redirigir
+    redirectIfLoggedIn();
+
+    // Enter para hacer login
+    document.addEventListener("keydown", e => {
+      if (e.key === "Enter") handleLogin();
+    });
+
+    function togglePassword() {
+      const pw = document.getElementById("password");
+      pw.type = pw.type === "password" ? "text" : "password";
+    }
+
+    async function handleLogin() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const btn      = document.getElementById("btn-login");
+      const errorEl  = document.getElementById("login-error");
+
+      if (!username || !password) {
+        errorEl.textContent = "Por favor completa usuario y contraseña.";
+        errorEl.style.display = "block";
+        return;
+      }
+
+      errorEl.style.display = "none";
+      const origText = btn.innerHTML;
+      setButtonLoading(btn, true);
+
+      try {
+        await doLogin(username, password);
+      } catch (err) {
+        errorEl.textContent = err.message || "Credenciales incorrectas. Intenta de nuevo.";
+        errorEl.style.display = "block";
+        setButtonLoading(btn, false, origText);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Sistema Académico</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-layout" id="app-layout">
+    <!-- sidebar se inyecta por JS -->
+
+    <div class="main-content">
+      <!-- Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button id="menu-toggle" class="btn btn-secondary btn-sm" style="display:none" aria-label="Menú">☰</button>
+          <h1>Dashboard</h1>
+          <p>Resumen general del sistema académico</p>
+        </div>
+        <div class="header-right">
+          <span id="header-date" class="text-sm text-muted"></span>
+        </div>
+      </header>
+
+      <!-- Contenido -->
+      <main class="page-content">
+
+        <!-- Stats -->
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue">👨‍🎓</div>
+            <div class="stat-info">
+              <strong id="stat-students">—</strong>
+              <span>Estudiantes</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon amber">👨‍🏫</div>
+            <div class="stat-info">
+              <strong id="stat-teachers">—</strong>
+              <span>Profesores</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green">📚</div>
+            <div class="stat-info">
+              <strong id="stat-subjects">—</strong>
+              <span>Materias</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon red">📝</div>
+            <div class="stat-info">
+              <strong id="stat-grades">—</strong>
+              <span>Notas registradas</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid inferior -->
+        <div class="grid-2">
+
+          <!-- Acciones rápidas -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Acciones rápidas</div>
+                <div class="card-subtitle">Atajos a las funciones más usadas</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <a href="grades.html" class="btn btn-primary">
+                  📝 Registrar Notas
+                </a>
+                <a href="report.html" class="btn btn-outline">
+                  📄 Generar Boletín
+                </a>
+                <a href="students.html" class="btn btn-secondary admin-only">
+                  👨‍🎓 Gestionar Estudiantes
+                </a>
+                <a href="subjects.html" class="btn btn-secondary admin-only">
+                  📚 Gestionar Materias
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Últimas notas -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Notas recientes</div>
+                <div class="card-subtitle">Últimos registros del sistema</div>
+              </div>
+            </div>
+            <div class="card-body" style="padding: 0">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Estudiante</th>
+                      <th>Materia</th>
+                      <th>Promedio</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-grades-tbody">
+                    <tr>
+                      <td colspan="3">
+                        <div class="table-loading">
+                          <div class="spinner"></div>
+                          <span>Cargando...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script>
+    const session = requireAuth();
+    renderSidebar("dashboard");
+    initMobileMenu();
+
+    // Fecha actual
+    document.getElementById("header-date").textContent =
+      new Date().toLocaleDateString("es-CO", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+    // Ocultar secciones de admin si no es admin
+    if (session && session.role !== "admin") {
+      document.querySelectorAll(".admin-only").forEach(el => el.classList.add("hidden"));
+    }
+
+    // Cargar estadísticas
+    async function loadStats() {
+      try {
+        const data = await apiGet("getDashboardStats");
+        document.getElementById("stat-students").textContent = data.students ?? "—";
+        document.getElementById("stat-teachers").textContent = data.teachers ?? "—";
+        document.getElementById("stat-subjects").textContent = data.subjects ?? "—";
+        document.getElementById("stat-grades").textContent   = data.grades ?? "—";
+
+        // Últimas notas
+        const tbody = document.getElementById("recent-grades-tbody");
+        const recent = data.recentGrades || [];
+        if (recent.length) {
+          tbody.innerHTML = recent.map(g => `
+            <tr>
+              <td>
+                <div class="name-cell">
+                  <div class="avatar avatar-sm">${getInitials(g.studentName || "?")}</div>
+                  <span class="text-sm">${g.studentName || "—"}</span>
+                </div>
+              </td>
+              <td><span class="badge badge-blue">${g.subjectName || "—"}</span></td>
+              <td>${formatGrade(g.promedio)}</td>
+            </tr>
+          `).join("");
+        } else {
+          tbody.innerHTML = `<tr><td colspan="3"><div class="table-empty"><p>Sin notas registradas aún.</p></div></td></tr>`;
+        }
+      } catch (err) {
+        showToast("Error cargando estadísticas: " + err.message, "error");
+        ["stat-students","stat-teachers","stat-subjects","stat-grades"].forEach(id => {
+          document.getElementById(id).textContent = "Error";
+        });
+      }
+    }
+
+    loadStats();
+  </script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estudiantes — Sistema Académico</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-layout" id="app-layout">
+    <div class="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <button id="menu-toggle" class="btn btn-secondary btn-sm">☰</button>
+          <h1>Estudiantes</h1>
+          <p>Gestión del padrón estudiantil</p>
+        </div>
+        <div class="header-right">
+          <button class="btn btn-primary" onclick="openCreateStudent()">+ Nuevo Estudiante</button>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Listado de Estudiantes</div>
+              <div class="card-subtitle" id="students-count">Cargando...</div>
+            </div>
+            <div class="toolbar-right">
+              <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="form-control" id="search-students" placeholder="Buscar estudiante...">
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Documento</th>
+                  <th>Grado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="students-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal: Crear / Editar Estudiante -->
+  <div class="modal-overlay" id="student-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="student-modal-title">Nuevo Estudiante</span>
+        <button class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="student-form" onsubmit="return false">
+          <input type="hidden" id="student-id">
+          <div class="form-group">
+            <label class="form-label">Nombre completo <span class="required">*</span></label>
+            <input type="text" id="student-nombre" class="form-control" placeholder="Ej: Juan Pérez García">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Documento / ID <span class="required">*</span></label>
+              <input type="text" id="student-doc" class="form-control" placeholder="Ej: 1234567890">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Grado / Curso <span class="required">*</span></label>
+              <input type="text" id="student-grado" class="form-control" placeholder="Ej: 10°A">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('student-modal')">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save-student" onclick="saveStudent()">💾 Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/students.js"></script>
+  <script>
+    requireAdmin();
+    renderSidebar("students");
+    initMobileMenu();
+
+    loadStudents().then(() => {
+      const count = document.querySelectorAll("#students-tbody tr").length;
+      setupTableSearch("search-students", "students-tbody");
+    });
+
+    // Actualizar contador
+    const origLoad = window.loadStudents;
+    window.loadStudents = async function() {
+      await origLoad();
+      const rows = document.querySelectorAll("#students-tbody tr:not([id])");
+      document.getElementById("students-count").textContent =
+        `${window.getAllStudents().length} estudiantes registrados`;
+    };
+    loadStudents();
+  </script>
+</body>
+</html>

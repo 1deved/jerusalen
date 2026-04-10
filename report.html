@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boletines — Sistema Académico</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-layout" id="app-layout">
+    <div class="main-content">
+      <header class="top-header no-print">
+        <div class="header-left">
+          <button id="menu-toggle" class="btn btn-secondary btn-sm">☰</button>
+          <h1>Boletines</h1>
+          <p>Generación de reportes académicos por estudiante</p>
+        </div>
+      </header>
+
+      <main class="page-content">
+
+        <!-- Panel de selección -->
+        <div class="card mb-24 no-print">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Generar Boletín</div>
+              <div class="card-subtitle">Selecciona el estudiante y el período académico.</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-row" style="align-items: end">
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Estudiante <span class="required">*</span></label>
+                <select id="report-student" class="form-control">
+                  <option value="">— Seleccionar estudiante —</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Período / Año</label>
+                <input type="text" id="report-period" class="form-control"
+                  placeholder="Ej: Año Escolar 2025"
+                  value="Año Escolar 2025">
+              </div>
+              <div>
+                <button class="btn btn-primary btn-lg" id="btn-generate" onclick="generateReport()">
+                  📄 Generar Boletín
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones de exportación -->
+        <div id="report-actions" class="hidden no-print mb-24">
+          <div style="display:flex; gap:10px; justify-content: flex-end">
+            <button class="btn btn-outline" onclick="printBulletin()">🖨️ Imprimir</button>
+            <button class="btn btn-primary"  onclick="exportPDF()">📥 Descargar PDF</button>
+          </div>
+        </div>
+
+        <!-- Aquí se renderiza el boletín -->
+        <div id="bulletin-container" class="hidden report-page"></div>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/report.js"></script>
+  <script>
+    requireAuth();
+    renderSidebar("report");
+    initMobileMenu();
+    initReportPage();
+  </script>
+</body>
+</html>

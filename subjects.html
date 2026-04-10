@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Materias — Sistema Académico</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-layout" id="app-layout">
+    <div class="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <button id="menu-toggle" class="btn btn-secondary btn-sm">☰</button>
+          <h1>Materias</h1>
+          <p>Gestión de asignaturas y profesores asignados</p>
+        </div>
+        <div class="header-right">
+          <button class="btn btn-primary" onclick="openCreateSubject(this)">+ Nueva Materia</button>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Listado de Materias</div>
+              <div class="card-subtitle" id="subjects-count">Cargando...</div>
+            </div>
+            <div class="toolbar-right">
+              <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="form-control" id="search-subjects" placeholder="Buscar materia...">
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Materia</th>
+                  <th>Profesor asignado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="subjects-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="subject-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="subject-modal-title">Nueva Materia</span>
+        <button class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="subject-form" onsubmit="return false">
+          <input type="hidden" id="subject-id">
+          <div class="form-group">
+            <label class="form-label">Nombre de la materia <span class="required">*</span></label>
+            <input type="text" id="subject-nombre" class="form-control" placeholder="Ej: Matemáticas, Ciencias Naturales...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Profesor asignado <span class="required">*</span></label>
+            <select id="subject-teacher" class="form-control">
+              <option value="">— Seleccionar profesor —</option>
+            </select>
+            <div class="form-hint">Si no hay profesores, <a href="teachers.html" style="color:var(--blue-500)">regístralos primero</a>.</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('subject-modal')">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save-subject" onclick="saveSubject()">💾 Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/teachers.js"></script>
+  <script src="js/subjects.js"></script>
+  <script>
+    requireAdmin();
+    renderSidebar("subjects");
+    initMobileMenu();
+
+    async function init() {
+      // Cargar profesores primero (necesarios para el select)
+      await loadTeachersData(); // Usar la nueva función para cargar datos de profesores
+
+      await loadSubjects();
+      document.getElementById("subjects-count").textContent =
+        `${getAllSubjects().length} materias registradas`;
+      setupTableSearch("search-subjects", "subjects-tbody");
+    }
+
+    init();
+  </script>
+</body>
+</html>
